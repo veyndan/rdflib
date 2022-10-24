@@ -119,12 +119,6 @@ class Param(TokenConverter):
         return ParamValue(self.name, tokenList)
 
 
-class plist(list):
-    """this is just a list, but we want our own type to check for"""
-
-    pass
-
-
 class CompValue(OrderedDict):
 
     """
@@ -232,7 +226,7 @@ class Comp(TokenConverter):
                 for i in t:
                     if isinstance(i, ParamValue):
                         if i.name not in res:
-                            res[i.name] = plist()
+                            res[i.name] = []
                         res[i.name].append(i.tokenList)
             elif isinstance(t, ParamValue):
                 res[t.name] = t.tokenList
