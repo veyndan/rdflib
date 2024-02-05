@@ -2,7 +2,7 @@ from collections import OrderedDict
 from types import MethodType
 from typing import TYPE_CHECKING, Any
 
-from pyparsing import ParseResults, TokenConverter, originalTextFor
+from pyparsing import ParseResults, TokenConverter, originalTextFor, And
 
 from rdflib import BNode, Variable
 
@@ -119,7 +119,7 @@ class Param(TokenConverter):
         self.setName(name)
         self.addParseAction(self.postParse2)
 
-    def postParse2(self, tokenList):
+    def postParse2(self, instring, loc, tokenList):
         return ParamValue(self.name, tokenList, self.isList)
 
 
@@ -130,6 +130,15 @@ class ParamList(Param):
 
     def __init__(self, name, expr):
         Param.__init__(self, name, expr, True)
+
+
+class ServiceGraphParam(Param):
+    def __init__(self, name, expr):
+        Param.__init__(self, name, expr, False)
+
+    def postParse2(self, instring, loc, tokenList):
+        print("ServiceGraphParam", instring, loc, tokenList)
+        return ParamValue(self.name, tokenList, self.isList)
 
 
 class plist(list):
@@ -232,13 +241,46 @@ class Comp(TokenConverter):
             res._evalfn = MethodType(self.evalfn, res)
         else:
             res = CompValue(self.name)
-            if self.name == "ServiceGraphPattern":
+            from rdflib.plugins.sparql.parser import ServiceGraphPattern
+            if self is ServiceGraphPattern:
                 # Then this must be a service graph pattern and have
                 # already matched.
                 # lets assume there is one, for now, then test for two later.
-                sgp = originalTextFor(self.expr)
+                if not isinstance(self.expr, And):
+                    raise TypeError("Expected expr to be an And.")
+                print()
+                print("----------------")
+                print(tokenList[1].tokenList)
+                print(type(tokenList[1].tokenList))
+                print(tokenList[2].tokenList)
+                print(type(tokenList[2].tokenList))
+                print("0==============0")
+                # print(originalTextFor(self.expr.exprs[3]).search_string(instring))
+                expr = self.expr.exprs[2]
+                print(expr)
+                sgp = originalTextFor(expr)
+                print(sgp)
+                service_string = sgp.searchString(instring, max_matches=1)[0][0]
+                print(service_string)
+                print("1==============1")
+                print()
+
+                print("2==============2")
+                expr = self.expr
+                print(expr)
+                sgp = originalTextFor(expr)
+                print(sgp)
                 service_string = sgp.searchString(instring)[0][0]
-                res["service_string"] = service_string
+                print(service_string)
+                print("3==============3")
+                print()
+                import re
+                match = re.match(
+                    "^service <.*>[ \n]*{(.*)}[ \n]*$",
+                    service_string,
+                    re.DOTALL | re.I,
+                )
+                res["service_query"] = match.group(1)
 
         for t in tokenList:
             if isinstance(t, ParamValue):

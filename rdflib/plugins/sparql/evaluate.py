@@ -317,48 +317,43 @@ def evalPart(ctx: QueryContext, part: CompValue):
 
 def evalServiceQuery(ctx: QueryContext, part: CompValue):
     res = {}
-    match = re.match(
-        "^service <(.*)>[ \n]*{(.*)}[ \n]*$",
-        part.get("service_string", ""),
-        re.DOTALL | re.I,
-    )
+    print('evalServiceQuery', part)
 
-    if match:
-        service_url = match.group(1)
-        service_query = _buildQueryStringForServiceCall(ctx, match.group(2))
+    service_url = part.term
+    service_query = part.get("service_query")
 
-        query_settings = {"query": service_query, "output": "json"}
-        headers = {
-            "accept": "application/sparql-results+json",
-            "user-agent": "rdflibForAnUser",
-        }
-        # GET is easier to cache so prefer that if the query is not to long
-        if len(service_query) < 600:
-            response = urlopen(
-                Request(service_url + "?" + urlencode(query_settings), headers=headers)
+    query_settings = {"query": service_query, "output": "json"}
+    headers = {
+        "accept": "application/sparql-results+json",
+        "user-agent": "rdflibForAnUser",
+    }
+    # GET is easier to cache so prefer that if the query is not to long
+    if len(service_query) < 600:
+        response = urlopen(
+            Request(service_url + "?" + urlencode(query_settings), headers=headers)
+        )
+    else:
+        response = urlopen(
+            Request(
+                service_url,
+                data=urlencode(query_settings).encode(),
+                headers=headers,
             )
-        else:
-            response = urlopen(
-                Request(
-                    service_url,
-                    data=urlencode(query_settings).encode(),
-                    headers=headers,
-                )
-            )
-        if response.status == 200:
-            json = j.loads(response.read())
-            variables = res["vars_"] = json["head"]["vars"]
-            # or just return the bindings?
-            res = json["results"]["bindings"]
-            if len(res) > 0:
-                for r in res:
-                    # type error: Argument 2 to "_yieldBindingsFromServiceCallResult" has incompatible type "str"; expected "Dict[str, Dict[str, str]]"
-                    for bound in _yieldBindingsFromServiceCallResult(ctx, r, variables):  # type: ignore[arg-type]
-                        yield bound
-        else:
-            raise Exception(
-                "Service: %s responded with code: %s", service_url, response.status
-            )
+        )
+    if response.status == 200:
+        json = j.loads(response.read())
+        variables = res["vars_"] = json["head"]["vars"]
+        # or just return the bindings?
+        res = json["results"]["bindings"]
+        if len(res) > 0:
+            for r in res:
+                # type error: Argument 2 to "_yieldBindingsFromServiceCallResult" has incompatible type "str"; expected "Dict[str, Dict[str, str]]"
+                for bound in _yieldBindingsFromServiceCallResult(ctx, r, variables):  # type: ignore[arg-type]
+                    yield bound
+    else:
+        raise Exception(
+            "Service: %s responded with code: %s", service_url, response.status
+        )
 
 
 """

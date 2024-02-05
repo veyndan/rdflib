@@ -39,8 +39,6 @@ def test_service():
 
     } }  } limit 2"""
     results = helper.query_with_retry(g, q)
-    print(results.vars)
-    print(results.bindings)
     assert len(results) == 2
 
     for r in results:
