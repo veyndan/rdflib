@@ -88,21 +88,9 @@ def value(
 
 
 class ParamValue(object):
-    """
-    The result of parsing a Param
-    This just keeps the name/value
-    All cleverness is in the CompValue
-    """
-
     def __init__(self, name, tokenList):
         self.name = name
-        if isinstance(tokenList, (list, ParseResults)) and len(tokenList) == 1:
-            tokenList = tokenList[0]
-
         self.tokenList = tokenList
-
-    def __str__(self):
-        return "Param(%s, %s)" % (self.name, self.tokenList)
 
 
 class Param(TokenConverter):
@@ -221,15 +209,24 @@ class Comp(TokenConverter):
                 service_string = sgp.searchString(instring)[0][0]
                 res["service_string"] = service_string
 
+        # What does the ungroup function do in pyparsing?
+
+        # TODO It's recursive!
+        #  Though shouldn't this recursion be done at the level of the parser, e.g., postParse?
+        #  Be wary that below we're doing `isinstance(i.tokenList, (list, ParseResults))` which doesn't want to do another recursion.
+        if not isinstance(tokenList, ParseResults):
+            raise Exception
         for t in tokenList:
             if isinstance(t, ParseResults):
                 for i in t:
                     if isinstance(i, ParamValue):
                         if i.name not in res:
                             res[i.name] = []
-                        res[i.name].append(i.tokenList)
+                        res[i.name].append(i.tokenList[0] if isinstance(i.tokenList, (list, ParseResults)) and len(i.tokenList) == 1 else i.tokenList)
+                    else:
+                        raise Exception
             elif isinstance(t, ParamValue):
-                res[t.name] = t.tokenList
+                res[t.name] = t.tokenList[0] if isinstance(t.tokenList, (list, ParseResults)) and len(t.tokenList) == 1 else t.tokenList
         return res
 
     def setEvalFn(self, evalfn):
