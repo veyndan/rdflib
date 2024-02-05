@@ -240,17 +240,26 @@ class Comp(TokenConverter):
                 service_string = sgp.searchString(instring)[0][0]
                 res["service_string"] = service_string
 
-        for t in tokenList:
-            if isinstance(t, ParamValue):
-                if t.isList:
-                    if t.name not in res:
-                        res[t.name] = plist()
-                    res[t.name].append(t.tokenList)
-                else:
-                    res[t.name] = t.tokenList
-                # res.append(t.tokenList)
-            # if isinstance(t,CompValue):
-            #    res.update(t)
+        print()
+        print(instring)
+        print(tokenList)
+        if len(tokenList) == 2:
+            print("Grouping!!!")
+            if tokenList[0] == 'BY':
+                res['condition'] = tokenList[1]
+        else:
+            for t in tokenList:
+                print(t)
+                if isinstance(t, ParamValue):
+                    if t.isList:
+                        if t.name not in res:
+                            res[t.name] = plist()
+                        res[t.name].append(t.tokenList)
+                    else:
+                        res[t.name] = t.tokenList
+                    # res.append(t.tokenList)
+                # if isinstance(t,CompValue):
+                #    res.update(t)
         return res
 
     def setEvalFn(self, evalfn):

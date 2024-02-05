@@ -1152,9 +1152,9 @@ GroupCondition = (
 # [19] GroupClause ::= 'GROUP' 'BY' GroupCondition+
 GroupClause = Comp(
     "GroupClause",
-    Keyword("GROUP")
+    Suppress(Keyword("GROUP"))
     + Keyword("BY")
-    + OneOrMore(ParamList("condition", GroupCondition)),
+    + Group(OneOrMore(GroupCondition.set_name("condition2"))),
 )
 
 
