@@ -307,7 +307,7 @@ def test_select_result_parse_serialized(
 
     serialized_data = serialize_select(select_result, format_info.name, encoding)
 
-    logging.debug("serialized_data = %s", serialized_data.decode(encoding))
+    print("serialized_data = %s", serialized_data.decode(encoding))
 
     source: Union[BinaryIO, TextIO]
     if source_type is SourceType.TEXT_IO:
@@ -319,7 +319,7 @@ def test_select_result_parse_serialized(
 
     parsed_result = Result.parse(source, format=format_info.name)
 
-    assert select_result == parsed_result
+    assert parsed_result == select_result
 
 
 def make_test_serialize_to_strdest_tests() -> Iterator[ParameterSet]:

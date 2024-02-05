@@ -419,7 +419,7 @@
     earl:assertedBy <https://github.com/RDFLib/rdflib> ;
     earl:mode earl:automatic ;
     earl:result [ a earl:TestResult ;
-            earl:outcome earl:passed ] ;
+            earl:outcome earl:failed ] ;
     earl:subject <https://github.com/RDFLib/rdflib> ;
     earl:test <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/bind/manifest#bind03> .
 
@@ -475,7 +475,7 @@
     earl:assertedBy <https://github.com/RDFLib/rdflib> ;
     earl:mode earl:automatic ;
     earl:result [ a earl:TestResult ;
-            earl:outcome earl:passed ] ;
+            earl:outcome earl:failed ] ;
     earl:subject <https://github.com/RDFLib/rdflib> ;
     earl:test <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/bind/manifest#bind11> .
 
@@ -483,7 +483,7 @@
     earl:assertedBy <https://github.com/RDFLib/rdflib> ;
     earl:mode earl:automatic ;
     earl:result [ a earl:TestResult ;
-            earl:outcome earl:passed ] ;
+            earl:outcome earl:failed ] ;
     earl:subject <https://github.com/RDFLib/rdflib> ;
     earl:test <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/bindings/manifest#inline1> .
 
@@ -1163,7 +1163,7 @@
     earl:assertedBy <https://github.com/RDFLib/rdflib> ;
     earl:mode earl:automatic ;
     earl:result [ a earl:TestResult ;
-            earl:outcome earl:passed ] ;
+            earl:outcome earl:failed ] ;
     earl:subject <https://github.com/RDFLib/rdflib> ;
     earl:test <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/entailment/manifest#bind03> .
 
@@ -2371,7 +2371,7 @@
     earl:assertedBy <https://github.com/RDFLib/rdflib> ;
     earl:mode earl:automatic ;
     earl:result [ a earl:TestResult ;
-            earl:outcome earl:passed ] ;
+            earl:outcome earl:failed ] ;
     earl:subject <https://github.com/RDFLib/rdflib> ;
     earl:test <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/negation/manifest#subset-01> .
 
@@ -3075,7 +3075,7 @@
     earl:assertedBy <https://github.com/RDFLib/rdflib> ;
     earl:mode earl:automatic ;
     earl:result [ a earl:TestResult ;
-            earl:outcome earl:passed ] ;
+            earl:outcome earl:failed ] ;
     earl:subject <https://github.com/RDFLib/rdflib> ;
     earl:test <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/subquery/manifest#subquery08> .
 
@@ -3083,7 +3083,7 @@
     earl:assertedBy <https://github.com/RDFLib/rdflib> ;
     earl:mode earl:automatic ;
     earl:result [ a earl:TestResult ;
-            earl:outcome earl:passed ] ;
+            earl:outcome earl:failed ] ;
     earl:subject <https://github.com/RDFLib/rdflib> ;
     earl:test <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/subquery/manifest#subquery09> .
 
@@ -3123,7 +3123,7 @@
     earl:assertedBy <https://github.com/RDFLib/rdflib> ;
     earl:mode earl:automatic ;
     earl:result [ a earl:TestResult ;
-            earl:outcome earl:passed ] ;
+            earl:outcome earl:failed ] ;
     earl:subject <https://github.com/RDFLib/rdflib> ;
     earl:test <http://www.w3.org/2009/sparql/docs/tests/data-sparql11/subquery/manifest#subquery14> .
 

@@ -27,7 +27,7 @@ import rdflib
 from rdflib.compat import decodeUnicodeEscape
 
 from . import operators as op
-from .parserutils import Comp, Param, ParamList
+from .parserutils import Comp, Param
 
 # from pyparsing import Keyword as CaseSensitiveKeyword
 
@@ -427,9 +427,9 @@ GraphRefAll = (
 )
 
 # [45] GraphOrDefault ::= 'DEFAULT' | 'GRAPH'? iri
-GraphOrDefault = ParamList("graph", Keyword("DEFAULT")) | Optional(
+GraphOrDefault = Group(Param("graph", Keyword("DEFAULT"))) | Optional(
     Keyword("GRAPH")
-) + ParamList("graph", iri)
+) + Group(Param("graph", iri))
 
 # [65] DataBlockValue ::= iri | RDFLiteral | NumericLiteral | BooleanLiteral | 'UNDEF'
 DataBlockValue = iri | RDFLiteral | NumericLiteral | BooleanLiteral | Keyword("UNDEF")
@@ -466,11 +466,11 @@ Path = Forward()
 # [95] PathNegatedPropertySet ::= PathOneInPropertySet | '(' ( PathOneInPropertySet ( '|' PathOneInPropertySet )* )? ')'
 PathNegatedPropertySet = Comp(
     "PathNegatedPropertySet",
-    ParamList("part", PathOneInPropertySet)
+    Group(Param("part", PathOneInPropertySet))
     | "("
     + Optional(
-        ParamList("part", PathOneInPropertySet)
-        + ZeroOrMore("|" + ParamList("part", PathOneInPropertySet))
+        Group(Param("part", PathOneInPropertySet))
+        + Group(ZeroOrMore("|" + Param("part", PathOneInPropertySet)))
     )
     + ")",
 )
@@ -498,15 +498,15 @@ PathEltOrInverse = PathElt | Suppress("^") + Comp(
 # [90] PathSequence ::= PathEltOrInverse ( '/' PathEltOrInverse )*
 PathSequence = Comp(
     "PathSequence",
-    ParamList("part", PathEltOrInverse)
-    + ZeroOrMore("/" + ParamList("part", PathEltOrInverse)),
+    Group(Param("part", PathEltOrInverse))
+    + Group(ZeroOrMore("/" + Param("part", PathEltOrInverse))),
 )
 
 
 # [89] PathAlternative ::= PathSequence ( '|' PathSequence )*
 PathAlternative = Comp(
     "PathAlternative",
-    ParamList("part", PathSequence) + ZeroOrMore("|" + ParamList("part", PathSequence)),
+    Group(Param("part", PathSequence)) + Group(ZeroOrMore("|" + Param("part", PathSequence))),
 )
 
 # [88] Path ::= PathAlternative
@@ -583,8 +583,8 @@ TriplesSameSubject.setParseAction(expandTriples)
 # To accommodate arbitrary amounts of triples this rule is rewritten to not be
 # recursive:
 # [52*] TriplesTemplate ::= TriplesSameSubject ( '.' TriplesSameSubject? )*
-TriplesTemplate = ParamList("triples", TriplesSameSubject) + ZeroOrMore(
-    Suppress(".") + Optional(ParamList("triples", TriplesSameSubject))
+TriplesTemplate = Group(Param("triples", TriplesSameSubject)) + ZeroOrMore(
+    Suppress(".") + Optional(Group(Param("triples", TriplesSameSubject)))
 )
 
 # [51] QuadsNotTriples ::= 'GRAPH' VarOrIri '{' Optional(TriplesTemplate) '}'
@@ -598,7 +598,7 @@ Quads = Comp(
     "Quads",
     Optional(TriplesTemplate)
     + ZeroOrMore(
-        ParamList("quadsNotTriples", QuadsNotTriples)
+        Group(Param("quadsNotTriples", QuadsNotTriples))
         + Optional(Suppress("."))
         + Optional(TriplesTemplate)
     ),
@@ -618,7 +618,7 @@ TriplesSameSubjectPath.setParseAction(expandTriples)
 
 # [55] TriplesBlock ::= TriplesSameSubjectPath ( '.' Optional(TriplesBlock) )?
 TriplesBlock = Forward()
-TriplesBlock <<= ParamList("triples", TriplesSameSubjectPath) + Optional(
+TriplesBlock <<= Group(Param("triples", TriplesSameSubjectPath)) + Optional(
     Suppress(".") + Optional(TriplesBlock)
 )
 
@@ -631,8 +631,8 @@ MinusGraphPattern = Comp(
 # [67] GroupOrUnionGraphPattern ::= GroupGraphPattern ( 'UNION' GroupGraphPattern )*
 GroupOrUnionGraphPattern = Comp(
     "GroupOrUnionGraphPattern",
-    ParamList("graph", GroupGraphPattern)
-    + ZeroOrMore(Keyword("UNION") + ParamList("graph", GroupGraphPattern)),
+    Group(Param("graph", GroupGraphPattern))
+    + ZeroOrMore(Keyword("UNION") + Group(Param("graph", GroupGraphPattern))),
 )
 
 
@@ -1000,7 +1000,7 @@ ArgList = (
     NIL
     | "("
     + Param("distinct", _Distinct)
-    + delimitedList(ParamList("expr", Expression))
+    + delimitedList(Group(Param("expr", Expression)))
     + ")"
 )
 
@@ -1044,9 +1044,11 @@ UnaryExpression = (
 MultiplicativeExpression = Comp(
     "MultiplicativeExpression",
     Param("expr", UnaryExpression)
-    + ZeroOrMore(
-        ParamList("op", "*") + ParamList("other", UnaryExpression)
-        | ParamList("op", "/") + ParamList("other", UnaryExpression)
+    + Group(
+        ZeroOrMore(
+            Param("op", "*") + Param("other", UnaryExpression)
+            | Param("op", "/") + Param("other", UnaryExpression)
+        )
     ),
 ).setEvalFn(op.MultiplicativeExpression)
 
@@ -1062,9 +1064,11 @@ MultiplicativeExpression = Comp(
 AdditiveExpression = Comp(
     "AdditiveExpression",
     Param("expr", MultiplicativeExpression)
-    + ZeroOrMore(
-        ParamList("op", "+") + ParamList("other", MultiplicativeExpression)
-        | ParamList("op", "-") + ParamList("other", MultiplicativeExpression)
+    + Group(
+        ZeroOrMore(
+            Param("op", "+") + Param("other", MultiplicativeExpression)
+            | Param("op", "-") + Param("other", MultiplicativeExpression)
+        )
     ),
 ).setEvalFn(op.AdditiveExpression)
 
@@ -1099,14 +1103,14 @@ ValueLogical = RelationalExpression
 # [112] ConditionalAndExpression ::= ValueLogical ( '&&' ValueLogical )*
 ConditionalAndExpression = Comp(
     "ConditionalAndExpression",
-    Param("expr", ValueLogical) + ZeroOrMore("&&" + ParamList("other", ValueLogical)),
+    Param("expr", ValueLogical) + Group(ZeroOrMore("&&" + Param("other", ValueLogical))),
 ).setEvalFn(op.ConditionalAndExpression)
 
 # [111] ConditionalOrExpression ::= ConditionalAndExpression ( '||' ConditionalAndExpression )*
 ConditionalOrExpression = Comp(
     "ConditionalOrExpression",
     Param("expr", ConditionalAndExpression)
-    + ZeroOrMore("||" + ParamList("other", ConditionalAndExpression)),
+    + Group(ZeroOrMore("||" + Param("other", ConditionalAndExpression))),
 ).setEvalFn(op.ConditionalOrExpression)
 
 # [110] Expression ::= ConditionalOrExpression
@@ -1154,7 +1158,7 @@ GroupClause = Comp(
     "GroupClause",
     Keyword("GROUP")
     + Keyword("BY")
-    + OneOrMore(ParamList("condition", GroupCondition)),
+    + Group(OneOrMore(Param("condition", GroupCondition))),
 )
 
 
@@ -1222,7 +1226,7 @@ Modify = Comp(
         Param("delete", DeleteClause) + Optional(Param("insert", InsertClause))
         | Param("insert", InsertClause)
     )
-    + ZeroOrMore(ParamList("using", UsingClause))
+    + Group(ZeroOrMore(Param("using", UsingClause)))
     + Keyword("WHERE")
     + Param("where", GroupGraphPattern),
 )
@@ -1246,17 +1250,19 @@ Update1 = (
 
 # [63] InlineDataOneVar ::= Var '{' ZeroOrMore(DataBlockValue) '}'
 InlineDataOneVar = (
-    ParamList("var", Var) + "{" + ZeroOrMore(ParamList("value", DataBlockValue)) + "}"
+    Group(Param("var", Var)) + "{" + Group(ZeroOrMore(Param("value", DataBlockValue))) + "}"
 )
 
 # [64] InlineDataFull ::= ( NIL | '(' ZeroOrMore(Var) ')' ) '{' ( '(' ZeroOrMore(DataBlockValue) ')' | NIL )* '}'
 InlineDataFull = (
-    (NIL | "(" + ZeroOrMore(ParamList("var", Var)) + ")")
+    (NIL | "(" + Group(ZeroOrMore(Param("var", Var)) + ")"))
     + "{"
-    + ZeroOrMore(
-        ParamList(
-            "value",
-            Group(Suppress("(") + ZeroOrMore(DataBlockValue) + Suppress(")") | NIL),
+    + Group(
+        ZeroOrMore(
+            Param(
+                "value",
+                Group(Suppress("(") + ZeroOrMore(DataBlockValue) + Suppress(")") | NIL),
+            )
         )
     )
     + "}"
@@ -1274,7 +1280,7 @@ ValuesClause = Optional(
 
 # [74] ConstructTriples ::= TriplesSameSubject ( '.' Optional(ConstructTriples) )?
 ConstructTriples = Forward()
-ConstructTriples <<= ParamList("template", TriplesSameSubject) + Optional(
+ConstructTriples <<= Group(Param("template", TriplesSameSubject)) + Optional(
     Suppress(".") + Optional(ConstructTriples)
 )
 
@@ -1331,11 +1337,13 @@ GraphPatternNotTriples = (
 # [54] GroupGraphPatternSub ::= Optional(TriplesBlock) ( GraphPatternNotTriples '.'? Optional(TriplesBlock) )*
 GroupGraphPatternSub = Comp(
     "GroupGraphPatternSub",
-    Optional(ParamList("part", Comp("TriplesBlock", TriplesBlock)))
-    + ZeroOrMore(
-        ParamList("part", GraphPatternNotTriples)
-        + Optional(".")
-        + Optional(ParamList("part", Comp("TriplesBlock", TriplesBlock)))
+    Optional(Group(Param("part", Comp("TriplesBlock", TriplesBlock))))
+    + Group(
+        ZeroOrMore(
+            Param("part", GraphPatternNotTriples)
+            + Optional(".")
+            + Optional(Group(Param("part", Comp("TriplesBlock", TriplesBlock))))
+        )
     ),
 )
 
@@ -1347,7 +1355,7 @@ HavingCondition = Constraint
 # [21] HavingClause ::= 'HAVING' HavingCondition+
 HavingClause = Comp(
     "HavingClause",
-    Keyword("HAVING") + OneOrMore(ParamList("condition", HavingCondition)),
+    Keyword("HAVING") + Group(OneOrMore(Param("condition", HavingCondition))),
 )
 
 # [24] OrderCondition ::= ( ( 'ASC' | 'DESC' ) BrackettedExpression )
@@ -1364,7 +1372,7 @@ OrderClause = Comp(
     "OrderClause",
     Keyword("ORDER")
     + Keyword("BY")
-    + OneOrMore(ParamList("condition", OrderCondition)),
+    + Group(OneOrMore(Param("condition", OrderCondition))),
 )
 
 # [26] LimitClause ::= 'LIMIT' INTEGER
@@ -1393,20 +1401,22 @@ SelectClause = (
     Keyword("SELECT")
     + Optional(Param("modifier", Keyword("DISTINCT") | Keyword("REDUCED")))
     + (
-        OneOrMore(
-            ParamList(
-                "projection",
-                Comp(
-                    "vars",
-                    Param("var", Var)
-                    | (
-                        Literal("(")
-                        + Param("expr", Expression)
-                        + Keyword("AS")
-                        + Param("evar", Var)
-                        + ")"
+        Group(
+            OneOrMore(
+                Param(
+                    "projection",
+                    Comp(
+                        "vars",
+                        Param("var", Var)
+                        | (
+                            Literal("(")
+                            + Param("expr", Expression)
+                            + Keyword("AS")
+                            + Param("evar", Var)
+                            + ")"
+                        ),
                     ),
-                ),
+                )
             )
         )
         | "*"
@@ -1428,7 +1438,7 @@ GroupGraphPattern <<= Suppress("{") + (SubSelect | GroupGraphPatternSub) + Suppr
 SelectQuery = Comp(
     "SelectQuery",
     SelectClause
-    + ZeroOrMore(ParamList("datasetClause", DatasetClause))
+    + Group(ZeroOrMore(Param("datasetClause", DatasetClause)))
     + WhereClause
     + SolutionModifier
     + ValuesClause,
@@ -1442,11 +1452,11 @@ ConstructQuery = Comp(
     Keyword("CONSTRUCT")
     + (
         ConstructTemplate
-        + ZeroOrMore(ParamList("datasetClause", DatasetClause))
+        + Group(ZeroOrMore(Param("datasetClause", DatasetClause)))
         + WhereClause
         + SolutionModifier
         + ValuesClause
-        | ZeroOrMore(ParamList("datasetClause", DatasetClause))
+        | Group(ZeroOrMore(Param("datasetClause", DatasetClause)))
         + Keyword("WHERE")
         + "{"
         + Optional(
@@ -1454,7 +1464,7 @@ ConstructQuery = Comp(
                 "where",
                 Comp(
                     "FakeGroupGraphPatten",
-                    ParamList("part", Comp("TriplesBlock", TriplesTemplate)),
+                    Group(Param("part", Comp("TriplesBlock", TriplesTemplate))),
                 ),
             )
         )
@@ -1478,7 +1488,7 @@ AskQuery = Comp(
 DescribeQuery = Comp(
     "DescribeQuery",
     Keyword("DESCRIBE")
-    + (OneOrMore(ParamList("var", VarOrIri)) | "*")
+    + (Group(OneOrMore(Param("var", VarOrIri)) | "*"))
     + Param("datasetClause", ZeroOrMore(DatasetClause))
     + Optional(WhereClause)
     + SolutionModifier
@@ -1487,8 +1497,8 @@ DescribeQuery = Comp(
 
 # [29] Update ::= Prologue ( Update1 ( ';' Update )? )?
 Update = Forward()
-Update <<= ParamList("prologue", Prologue) + Optional(
-    ParamList("request", Update1) + Optional(";" + Update)
+Update <<= Group(Param("prologue", Prologue)) + Optional(
+    Group(Param("request", Update1)) + Optional(";" + Update)
 )
 
 
