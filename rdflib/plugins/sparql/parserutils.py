@@ -235,10 +235,12 @@ class Comp(TokenConverter):
             if self.name == "ServiceGraphPattern":
                 # Then this must be a service graph pattern and have
                 # already matched.
-                # lets assume there is one, for now, then test for two later.
                 sgp = originalTextFor(self.expr)
-                service_string = sgp.searchString(instring)[0][0]
-                res["service_string"] = service_string
+                parse_results = sgp.searchString(instring)
+                print(len(parse_results), loc, self.expr)
+                res["service_string"] = [
+                    parse_result[0] for parse_result in parse_results
+                ]
 
         for t in tokenList:
             if isinstance(t, ParamValue):

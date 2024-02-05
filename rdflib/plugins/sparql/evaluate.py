@@ -315,13 +315,21 @@ def evalPart(ctx: QueryContext, part: CompValue):
         raise Exception("I dont know: %s" % part.name)
 
 
+A = 1
+
+
 def evalServiceQuery(ctx: QueryContext, part: CompValue):
+    global A
     res = {}
+    print("evalServiceQuery")
     match = re.match(
         "^service <(.*)>[ \n]*{(.*)}[ \n]*$",
-        part.get("service_string", ""),
+        part.get("service_string", [])[A],
         re.DOTALL | re.I,
     )
+
+    print(A)
+    A -= 1
 
     if match:
         service_url = match.group(1)

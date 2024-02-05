@@ -104,6 +104,36 @@ def test_service_with_bound_solutions():
         assert len(r) == 3
 
 
+def test_service_in_subquery_with_bind_and_outer_service():
+    results = Graph().query(
+        """
+        SELECT ?subject ?boundPerson WHERE {
+          {
+            SELECT ?boundPerson WHERE {
+              BIND(<http://www.wikidata.org/entity/Q42> AS ?person)
+
+              SERVICE <https://query.wikidata.org/sparql> {
+                SELECT (BOUND(?person) AS ?boundPerson) WHERE {}
+              }
+            }
+          }
+          SERVICE <https://query.wikidata.org/sparql> {
+            SELECT ?subject {
+                ?subject ?predicate ?object.
+            }
+            LIMIT 1
+          }
+        }
+        """
+    )
+    assert len(results) == 1
+
+    for r in results.bindings:
+        assert len(r) == 2
+        assert r[Variable("boundPerson")] == Literal(True)
+        assert r[Variable("subject")] is not None
+
+
 def test_service_with_values():
     g = Graph()
     q = """select ?sameAs ?dbpComment ?subject
@@ -347,6 +377,7 @@ if __name__ == "__main__":
     test_service()
     test_service_with_bind()
     test_service_with_bound_solutions()
+    test_service_in_subquery_with_bind_and_outer_service()
     test_service_with_values()
     test_service_with_implicit_select()
     test_service_with_implicit_select_and_prefix()
