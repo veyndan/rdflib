@@ -2,7 +2,7 @@ from collections import OrderedDict
 from types import MethodType
 from typing import TYPE_CHECKING, Any
 
-from pyparsing import ParseResults, TokenConverter, originalTextFor
+from pyparsing import ParseResults, TokenConverter, originalTextFor, And, ParserElement
 
 from rdflib import BNode, Variable
 
@@ -119,7 +119,7 @@ class Param(TokenConverter):
         self.setName(name)
         self.addParseAction(self.postParse2)
 
-    def postParse2(self, tokenList):
+    def postParse2(self, instring, loc, tokenList):
         return ParamValue(self.name, tokenList, self.isList)
 
 
@@ -130,6 +130,14 @@ class ParamList(Param):
 
     def __init__(self, name, expr):
         Param.__init__(self, name, expr, True)
+
+
+class ServiceGraphParam(Param):
+    def __init__(self, name: str, expr: ParserElement):
+        Param.__init__(self, name, expr)
+
+    def postParse2(self, instring, loc, tokenList):
+        return ParamValue(self.name, tokenList, self.isList)
 
 
 class plist(list):
@@ -236,6 +244,9 @@ class Comp(TokenConverter):
                 # Then this must be a service graph pattern and have
                 # already matched.
                 # lets assume there is one, for now, then test for two later.
+                if not isinstance(self.expr, And):
+                    raise TypeError("Expected expr to be an And.")
+                # print(originalTextFor(self.expr.exprs[3]).search_string(instring))
                 sgp = originalTextFor(self.expr)
                 service_string = sgp.searchString(instring)[0][0]
                 res["service_string"] = service_string

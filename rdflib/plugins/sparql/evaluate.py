@@ -317,15 +317,16 @@ def evalPart(ctx: QueryContext, part: CompValue):
 
 def evalServiceQuery(ctx: QueryContext, part: CompValue):
     res = {}
+    print("evalServiceQuery", part)
     match = re.match(
-        "^service <(.*)>[ \n]*{(.*)}[ \n]*$",
+        "^service <.*>[ \n]*{(.*)}[ \n]*$",
         part.get("service_string", ""),
         re.DOTALL | re.I,
     )
 
     if match:
-        service_url = match.group(1)
-        service_query = _buildQueryStringForServiceCall(ctx, match.group(2))
+        service_url = part.term
+        service_query = _buildQueryStringForServiceCall(ctx, match.group(1))
 
         query_settings = {"query": service_query, "output": "json"}
         headers = {

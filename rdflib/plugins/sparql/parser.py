@@ -27,7 +27,7 @@ import rdflib
 from rdflib.compat import decodeUnicodeEscape
 
 from . import operators as op
-from .parserutils import Comp, Param, ParamList
+from .parserutils import Comp, Param, ParamList, ServiceGraphParam
 
 # from pyparsing import Keyword as CaseSensitiveKeyword
 
@@ -1299,7 +1299,7 @@ ServiceGraphPattern = Comp(
     Keyword("SERVICE")
     + _Silent
     + Param("term", VarOrIri)
-    + Param("graph", GroupGraphPattern),
+    + ServiceGraphParam("graph", GroupGraphPattern),
 )
 
 # [60] Bind ::= 'BIND' '(' Expression 'AS' Var ')'
